@@ -13,11 +13,9 @@ pub struct TKeyValuePair<'a> {
 #[derive(PartialEq, Debug)]
 pub struct TArray<'a>(Vec<TItem<'a>>);
 
-/*
 pub fn parse(document: &str) -> TArray {
     parse_array(document)
 }
-*/
 
 fn parse_array(fragment: &str) -> TArray {
     let items: Vec<TItem> = fragment.lines().map(|item| {
