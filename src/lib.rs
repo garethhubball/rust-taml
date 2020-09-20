@@ -1,17 +1,23 @@
 #[derive(PartialEq, Debug)]
-enum TItem<'a> {
+pub enum TItem<'a> {
     KeyValuePair(TKeyValuePair<'a>),
     String(&'a str)
 }
 
 #[derive(PartialEq, Debug)]
-struct TKeyValuePair<'a> {
+pub struct TKeyValuePair<'a> {
     key: &'a str,
     value: &'a str
 }
 
 #[derive(PartialEq, Debug)]
-struct TArray<'a>(Vec<TItem<'a>>);
+pub struct TArray<'a>(Vec<TItem<'a>>);
+
+/*
+pub fn parse(document: &str) -> TArray {
+    parse_array(document)
+}
+*/
 
 fn parse_array(fragment: &str) -> TArray {
     let items: Vec<TItem> = fragment.lines().map(|item| {
