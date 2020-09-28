@@ -1,4 +1,4 @@
-mod parser;
+pub mod parser;
 
 #[derive(PartialEq, Debug)]
 pub enum TItem<'a> {

@@ -1,10 +1,10 @@
 #[derive(Debug, PartialEq)]
-struct Parsed<'a, T> {
+pub struct Parsed<'a, T> {
     result: T,
     rest: &'a str
 }
 
-type ParseResult<'a, T> = Result<Parsed<'a, T>, &'a str>;
+pub type ParseResult<'a, T> = Result<Parsed<'a, T>, &'a str>;
 
 fn pchar(to_parse: char) -> impl Fn(&str) -> ParseResult<char> {
     move |text | if text.starts_with(to_parse) {
@@ -14,7 +14,7 @@ fn pchar(to_parse: char) -> impl Fn(&str) -> ParseResult<char> {
     }
 }
 
-fn pword(to_parse: &str) -> impl Fn(&str) -> ParseResult<String> + '_ {
+pub fn pword(to_parse: &str) -> impl Fn(&str) -> ParseResult<String> + '_ {
     move |text| {
         let parsers = to_parse.chars().map(pchar);
         let acc = Ok(Parsed {result: "".to_string(), rest: text});
