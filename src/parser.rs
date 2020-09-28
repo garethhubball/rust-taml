@@ -6,7 +6,6 @@ struct Parsed<'a, T> {
 
 type ParseResult<'a, T> = Result<Parsed<'a, T>, &'a str>;
 
-
 fn pchar(to_parse: char) -> impl Fn(&str) -> ParseResult<char> {
     move |text | if text.starts_with(to_parse) {
         Ok(Parsed { result: to_parse, rest: text.split_at(1).1 })
@@ -18,22 +17,13 @@ fn pchar(to_parse: char) -> impl Fn(&str) -> ParseResult<char> {
 fn pword(to_parse: &str) -> impl Fn(&str) -> ParseResult<String> + '_ {
     move |text| {
         let parsers = to_parse.chars().map(pchar);
-        let mut acc = Ok(Parsed {result: "".to_string(), rest: text});
-        for parser in parsers {
-            acc = match acc {
-                Ok(Parsed {result: a_result, rest}) => {
-                    let next = parser(rest);
-                    match next {
-                        Ok(Parsed {result: c_result, rest: c_rest}) => {
-                            Ok(Parsed { result: format!("{}{}", a_result, c_result), rest: c_rest })
-                        },
-                        Err(err) => Err(err)
-                    }
-                },
-                err => err
-            }
-        }
-        acc
+        let acc = Ok(Parsed {result: "".to_string(), rest: text});
+        parsers.fold(acc, |acc, parser| {
+            let Parsed {result: a_result, rest} = acc?;
+            let next = parser(rest);
+            let Parsed {result: c_result, rest: c_rest} = next?;
+            Ok(Parsed { result: format!("{}{}", a_result, c_result), rest: c_rest })
+        })
     }
 }
 
