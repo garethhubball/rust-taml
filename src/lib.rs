@@ -1,3 +1,5 @@
+mod parser;
+
 #[derive(PartialEq, Debug)]
 pub enum TItem<'a> {
     KeyValuePair(TKeyValuePair<'a>),
@@ -12,25 +14,28 @@ pub struct TKeyValuePair<'a> {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct TArray<'a>(Vec<Box<TItem<'a>>>);
+pub struct TArray<'a>(Vec<TItem<'a>>);
 
 pub fn parse(document: &str) -> TArray {
     parse_array(document)
 }
 
 fn parse_array(fragment: &str) -> TArray {
-    let items: Vec<Box<TItem>> = fragment.lines().map(|item| {
+    let items: Vec<TItem> = fragment.lines().map(|item| {
         if item.contains('\t') {
-            Box::from(TItem::KeyValuePair(parse_kvp(item)))
+            TItem::KeyValuePair(parse_kvp(item))
         } else {
-            Box::from(TItem::String(item))
+            TItem::String(item)
         }
     }).collect();
     TArray(items)
 }
 
 fn parse_kvp(fragment: &str) -> TKeyValuePair {
-    let kvp: Vec<&str> = fragment.split('\t').filter(|item| item.len() > 0).collect();
+    // consume until non-separator
+    // consume whatever token as the key
+    // consume the item inside - (String: same line | Array: new lines)
+    let kvp: Vec<&str> = fragment.split('\t').filter(|item| !item.is_empty()).collect();
     TKeyValuePair { key: kvp[0], value: Box::from(TItem::String(kvp[1])) }
 }
 
@@ -55,21 +60,20 @@ mod tests {
     #[test]
     fn simple_array() {
         let document = "item1\nitem2";
-        let expected = TArray(vec![Box::from(TItem::String("item1")), Box::from(TItem::String("item2"))]);
+        let expected = TArray(vec![TItem::String("item1"), TItem::String("item2")]);
         assert_eq!(expected, parse_array(document));
     }
 
     #[test]
     fn array_of_kvp() {
         let document = "key\tvalue\nkey2\tvalue2";
-        let expected = TArray(vec![Box::from(TItem::KeyValuePair(TKeyValuePair {key: "key", value: Box::from(TItem::String("value"))})),
-                                   Box::from(TItem::KeyValuePair(TKeyValuePair {key: "key2", value: Box::from(TItem::String("value2"))}))]);
+        let expected = TArray(vec![TItem::KeyValuePair(TKeyValuePair {key: "key", value: Box::from(TItem::String("value"))}),
+                                   TItem::KeyValuePair(TKeyValuePair {key: "key2", value: Box::from(TItem::String("value2"))})]);
         assert_eq!(expected, parse_array(document));
     }
 
     #[test]
     #[ignore]
-    /// TODO: Does not yet work and requires significant work to fix.
     fn kvp_with_array_value() {
         let document = "fruits\n\tapple\n\tbanana";
         let expected = TKeyValuePair {
@@ -77,8 +81,8 @@ mod tests {
             value: Box::from(TItem::Array(
                 TArray(
                     vec![
-                        Box::from(TItem::String("apple")),
-                        Box::from(TItem::String("banana"))]))) };
+                        TItem::String("apple"),
+                        TItem::String("banana")]))) };
         assert_eq!(expected, parse_kvp(document));
     }
 }
